@@ -46,36 +46,28 @@ Preparing features...
 Training model...
 
 Demand Forecasting Results:
-Mean Absolute Error: 0.08
+Mean Absolute Error: 11.30
 
 Sample Predictions vs Actual:
 Actual: 12, Predicted: 12
-Actual: 64, Predicted: 64
-Actual: 10, Predicted: 10
+Actual: 64, Predicted: 52
+Actual: 10, Predicted: 9
 Actual: 14, Predicted: 14
-Actual: 10, Predicted: 10
+Actual: 10, Predicted: 13
 Extracting subgraph...
 Creating distance matrix...
-No single train solution found. Constructing path using multiple trains/transfers.
-No direct train between SVM and ZARP. Finding transfer...
-No direct train between KM and BTJL. Finding transfer...
-No direct train between BTJL and SRVX. Finding transfer...
-No direct train between PAY and CNR. Finding transfer...
-No direct train between CNR and HNA. Finding transfer...
-No direct train between KUDA and PERN. Finding transfer...
-No direct train between PERN and KT. Finding transfer...
 Current Path:
-SVM -> SRVX -> SRVX -> KM -> SVM -> BTJL -> QLM -> BTJL -> SRVX -> SVM -> PAY -> CNR -> CNR -> MAO -> HNA -> BTJL -> KUDA -> BTJL -> PERN -> KCVL -> SMV
-Current Distance: 3210.00 km
+SWV -> CNR -> MADR -> HAA -> VSG -> PERN -> CNO -> KT -> MRDW -> BLLI -> BTJL -> KAWR -> SRVX -> CTTP -> KRMI -> SJDA -> KUDA -> VEN -> SVM -> MAO
+Current Distance: 2104.00 km
 Finding optimal path...
 
 Path Optimization Results:
 Optimized Path:
-SWV -> ZARP -> KUDL -> KKW -> NAN -> PERN -> PAY -> MAJN -> UD -> KUDA -> SHMI -> BTJL -> HNA -> KT -> MAO -> SRVX -> CNR -> SVM -> KM -> KRMI -> SWV
+SWV -> MADR -> PERN -> MAO -> SJDA -> CNR -> SVM -> SRVX -> BLLI -> CNO -> KAWR -> HAA -> KT -> MRDW -> CTTP -> BTJL -> KUDA -> VSG -> KRMI -> VEN -> MAO
 
-Total Distance: 1193.00 km
+Total Distance: 724.00 km
 ```
-![WhatsApp Image 2024-11-16 at 22 43 06_586f8fe2](https://github.com/user-attachments/assets/a0e10b40-06cc-4bbd-87d1-8d47894297f7)
+![path](https://github.com/user-attachments/assets/a3a0efce-d2a7-4afb-8f42-cc167c2007fa)
 
 
 ## Note
