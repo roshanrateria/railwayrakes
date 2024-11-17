@@ -9,7 +9,7 @@ from ortools.constraint_solver import routing_enums_pb2
 from ortools.constraint_solver import pywrapcp
 import matplotlib.pyplot as plt
 import random
-
+import streamlit as st
 def load_and_clean_data(file_path):
     """
     Load and clean the railway dataset
@@ -80,7 +80,7 @@ def train_demand_model(features, target):
     """
     try:
         X_train, X_test, y_train, y_test = train_test_split(
-            features.drop(['Station Code'], axis=1),
+            features.drop(['Station Code','train_count'], axis=1),
             target,
             test_size=0.2,
             random_state=42
@@ -241,7 +241,7 @@ def optimize_path(distance_matrix, start_idx, end_idx):
             while not routing.IsEnd(index):
                 path.append(manager.IndexToNode(index))
                 index = solution.Value(routing.NextVar(index))
-            path.append(manager.IndexToNode(index))
+            path.append(manager.IndexToNode(end_idx))
             return path
         return None
     except Exception as e:
@@ -362,63 +362,106 @@ def get_segment_path_distance(df, station1, station2):
             return path, distance
 
     return None, None
+import networkx as nx
+import matplotlib.pyplot as plt
+
 def plot_optimized_network(subgraph, stations_list, optimized_path, start_station, end_station):
     """
-    Plot the subgraph with the optimized path highlighted
+    Plots the optimized path on the subway network.
+
+    Args:
+        subgraph: The NetworkX graph representing the subway network.
+        stations_list: A list of all station names in the network.
+        optimized_path: A list of station names representing the optimized path.
+        start_station: The name of the starting station.
+        end_station: The name of the ending station.
+    """
+
+    pos = nx.spring_layout(subgraph)  # You might want to experiment with different layouts
+
+    # Draw all nodes and edges
+    nx.draw_networkx_nodes(subgraph, pos, node_color='lightblue', node_size=50)
+    nx.draw_networkx_edges(subgraph, pos, edge_color='gray')
+    nx.draw_networkx_labels(subgraph, pos, font_size=10, font_family='sans-serif')
+
+
+    # Highlight the optimized path
+    path_edges = list(zip(optimized_path, optimized_path[1:]))
+    nx.draw_networkx_nodes(subgraph, pos, nodelist=optimized_path, node_color='red', node_size=100)
+    nx.draw_networkx_edges(subgraph, pos, edgelist=path_edges, edge_color='red', width=2)
+
+    # Highlight start and end nodes
+    nx.draw_networkx_nodes(subgraph, pos, nodelist=[start_station], node_color='green', node_size=150)  # Start node
+    nx.draw_networkx_nodes(subgraph, pos, nodelist=[end_station], node_color='purple', node_size=150)  # End node
+
+
+
+    plt.title(f"Optimized Path from {start_station} to {end_station}")
+    plt.axis('off')  # Turn off the axis
+    plt.savefig('path.png')
+    plt.show()
+
+
+# Example Usage (replace with your actual data):
+
+# Create a sample graph (replace with your actual graph)
+# subgraph = nx.Graph()
+# stations = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
+# subgraph.add_edges_from([('A', 'B'), ('B', 'C'), ('C', 'D'), ('D', 'E'), ('A', 'F'), ('F', 'G'), ('G', 'E')])
+
+# stations_list = stations
+# optimized_path = ['A', 'F', 'G', 'E']
+# start_station = 'A'
+# end_station = 'E'
+
+
+# plot_optimized_network(subgraph, stations_list, optimized_path, start_station, end_station)
+def naive_path_distance(distance_matrix, start_idx, end_idx):
+    """
+    Calculate the naive path and its distance for a TSP problem.
+
+    Args:
+        distance_matrix (list of list): Distance matrix for the nodes.
+        start_idx (int): Index of the start node.
+        end_idx (int): Index of the end node.
+
+    Returns:
+        tuple: Naive path as a list of node indices and the total distance.
     """
     try:
-        plt.figure(figsize=(12, 8))
+        if distance_matrix is None:
+            return None, None
 
-        # Create layout for graph visualization
-        pos = nx.spring_layout(subgraph, k=1, iterations=50)
+        # Simple naive path (visiting nodes sequentially from start to end)
+        p=[a for a in range(0, len(distance_matrix))]
+        p.remove(start_idx)
+        p.remove(end_idx)
+        naive_path = [start_idx]+p+[end_idx]
 
-        # Draw the network
-        nx.draw_networkx_edges(subgraph, pos, alpha=0.2, edge_color='gray')
-        nx.draw_networkx_nodes(subgraph, pos, node_size=100, node_color='lightblue')
+        # Calculate the total distance for the naive path
+        naive_distance = 0
+        for i in range(len(naive_path) - 1):
+            naive_distance += distance_matrix[naive_path[i]][naive_path[i + 1]]
 
-        # Draw station labels
-        labels = {station: station for station in subgraph.nodes()}
-        nx.draw_networkx_labels(subgraph, pos, labels, font_size=8)
-
-        # Highlight optimized path
-        path_edges = list(zip(optimized_path[:-1], optimized_path[1:]))
-        path_edges = [(stations_list[i], stations_list[j]) for i, j in path_edges]
-
-        nx.draw_networkx_edges(subgraph, pos, edgelist=path_edges, 
-                             edge_color='r', width=2)
-
-        # Highlight start and end stations
-        start_pos = {start_station: pos[start_station]}
-        end_pos = {end_station: pos[end_station]}
-        nx.draw_networkx_nodes(subgraph, start_pos, node_color='g', node_size=200)
-        nx.draw_networkx_nodes(subgraph, end_pos, node_color='r', node_size=200)
-
-        plt.title('Railway Network with Optimized Path')
-        plt.axis('off')
-        plt.show()
-
+        return naive_path, naive_distance
     except Exception as e:
-        print(f"Error plotting network: {e}")
-
+        print(f"Error calculating naive path: {e}")
+        return None, None
+# Load and clean data
 def main():
-    # Load and clean data
     print("Loading and cleaning data...")
     df = load_and_clean_data('Train_details_22122017.csv')
-    if df is None:
-        return
+    
     # Prepare features for demand forecasting
     print("Preparing features...")
     features = prepare_features_for_forecasting(df)
-    if features is None:
-        return
+    
     
     target = features['train_count']  # Using number of trains as demand
     
     # Train demand forecasting model
     print("Training model...")
     model, scaler, mae, X_test, y_test, y_pred = train_demand_model(features, target)
-    if model is None:
-        return
     
     print(f"\nDemand Forecasting Results:")
     print(f"Mean Absolute Error: {mae:.2f}")
@@ -431,48 +474,89 @@ def main():
     sample_route = df[df['Train No'] == sample_train]
     start_station = sample_route.iloc[0]['Station Code']
     end_station = sample_route.iloc[-1]['Station Code']
-
+    
     # Extract connected subgraph
     print("Extracting subgraph...")
     stations_list, subgraph = extract_connected_subgraph(
         df, start_station, end_station, num_nodes=20
     )
-
-    if stations_list is None or subgraph is None:
-        return
-
+    
+    
+    
     # Create distance matrix from subgraph
     print("Creating distance matrix...")
     distance_matrix = create_distance_matrix_from_subgraph(subgraph, stations_list)
-    if distance_matrix is None:
-        return
-
+    
+    
     # Get start and end indices in the subgraph
     start_idx = stations_list.index(start_station)
     end_idx = stations_list.index(end_station)
-    current_path, current_distance = get_original_path(df, start_station, end_station,stations_list)
+    current_path, current_distance = naive_path_distance(distance_matrix,start_idx,end_idx)
     if current_path:
         print("Current Path:")
-        print(" -> ".join(current_path))
+        path_stations = [stations_list[i] for i in current_path]
+        print(" -> ".join(path_stations))
         print(f"Current Distance: {current_distance:.2f} km")
     # Optimize path
     print("Finding optimal path...")
     optimized_path = optimize_path(distance_matrix, start_idx, end_idx)
-
+    
     if optimized_path:
         print("\nPath Optimization Results:")
         print("Optimized Path:")
         path_stations = [stations_list[i] for i in optimized_path]
         print(" -> ".join(path_stations))
-
+    
         # Calculate total distance
         total_distance = sum(distance_matrix[optimized_path[i]][optimized_path[i+1]] 
                            for i in range(len(optimized_path)-1))
         print(f"\nTotal Distance: {total_distance:.2f} km")
-
+    
         # Visualize the network and path
-        plot_optimized_network(subgraph, stations_list, optimized_path, 
+        plot_optimized_network(subgraph, stations_list, path_stations, 
                              start_station, end_station)
+        return model, scaler, mae, X_test, y_test, y_pred 
 
-if __name__ == "__main__":
-    main()
+st.title("Train Demand Prediction")
+print("Loading and cleaning data...")
+df = load_and_clean_data('Train_details_22122017.csv')
+features = prepare_features_for_forecasting(df)
+features=features.drop(['train_count'],axis=1)
+# Train the model with the full dataset and get the model, scaler, and MAE
+if 'model' not in st.session_state:
+    # Train the model only once
+
+    
+    model, scaler, mae, X_test, y_test, y_pred = main()
+    
+    if model is not None:
+        # Store the model and scaler in session state
+        st.session_state.model = model
+        st.session_state.scaler = scaler
+        st.session_state.mae = mae
+        st.session_state.X_test = X_test
+        st.session_state.y_test = y_test
+        st.session_state.y_pred = y_pred
+# If model is trained successfully, make a prediction for the selected station
+station_code = st.selectbox("Select Station Code", df['Station Code'].unique())
+
+# Filter the data for the selected station
+station_data = features[features['Station Code'] == station_code].drop('Station Code', axis=1)
+
+# Show the details of the selected station
+st.write("Selected Station Details", station_data)
+
+# Check if model and scaler exist in session state
+if 'model' in st.session_state and 'scaler' in st.session_state:
+    model = st.session_state.model
+    scaler = st.session_state.scaler
+    
+    # Scale the selected station's data
+    scaled_station_data = scaler.transform(station_data)
+    
+    # Make a prediction
+    prediction = model.predict(scaled_station_data)
+    
+    # Display the result
+    st.write(f"Predicted Train Demand for Station {station_code}: {prediction[0]}")
+    st.write(f"Model MAE: {st.session_state.mae}")
