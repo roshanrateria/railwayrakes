@@ -23,12 +23,12 @@ This project focuses on the forecasting and scheduling of railway rakes to optim
 
 2. Install the required libraries:
    ```sh
-   pip install pandas numpy scikit-learn networkx ortools matplotlib
+   pip install pandas numpy scikit-learn networkx ortools matplotlib streamlit
    ```
 
 3. Run the script:
    ```sh
-   python test.py
+  streamlit run test.py
    ```
 
 ## How It Aligns with the Topic
