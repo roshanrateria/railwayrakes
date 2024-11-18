@@ -28,7 +28,7 @@ This project focuses on the forecasting and scheduling of railway rakes to optim
 
 3. Run the script:
    ```sh
-  streamlit run test.py
+   streamlit run test.py
    ```
 
 ## How It Aligns with the Topic
